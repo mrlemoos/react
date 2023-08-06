@@ -2259,6 +2259,7 @@ function updateCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
 function mountMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
+  diff?: ((current: T, previous: Partial<T>) => boolean)
 ): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
@@ -2273,10 +2274,18 @@ function mountMemo<T>(
 function updateMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
+  diff?: ((current: T, previous: Partial<T>) => boolean)
 ): T {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const prevState = hook.memoizedState;
+  
+  if (typeof diff === 'function') {
+    if (!diff(nextDeps, prevState)) {
+      return prevState[0];
+    }
+  }
+  
   // Assume these are defined. If they're not, areHookInputsEqual will warn.
   if (nextDeps !== null) {
     const prevDeps: Array<mixed> | null = prevState[1];
@@ -3177,7 +3186,7 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
@@ -3337,7 +3346,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
@@ -3497,14 +3506,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current =
         InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateMemo(create, deps);
+        return updateMemo(create, deps, diff);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -3659,14 +3668,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current =
         InvalidNestedHooksDispatcherOnRerenderInDEV;
       try {
-        return updateMemo(create, deps);
+        return updateMemo(create, deps, diff);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -3831,7 +3840,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -4015,7 +4024,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -4023,7 +4032,7 @@ if (__DEV__) {
       ReactCurrentDispatcher.current =
         InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateMemo(create, deps);
+        return updateMemo(create, deps, diff);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -4202,7 +4211,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null, diff?: ((current: T, previous: Partial<T>) => boolean)): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -4210,7 +4219,7 @@ if (__DEV__) {
       ReactCurrentDispatcher.current =
         InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateMemo(create, deps);
+        return updateMemo(create, deps, diff);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
